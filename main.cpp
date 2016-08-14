@@ -315,12 +315,12 @@ bool PrintExpression(elementNode node)
     bool ret;
     
     if (node.left == -1) {
-        cout << node.value;
+        //cout << node.value;
         answer = answer + num2Card(node.value);
     } else {
         elementMap::iterator iter;
         
-        cout << "(";
+        //cout << "(";
         answer = answer + "(";
         
         iter = state[node.left].element_map.find(node.left_value);
@@ -333,7 +333,7 @@ bool PrintExpression(elementNode node)
             return ret;
         }
         
-        cout << node.opr;
+        //cout << node.opr;
         answer = answer + node.opr;
         
         iter = state[node.right].element_map.find(node.right_value);
@@ -346,7 +346,7 @@ bool PrintExpression(elementNode node)
             return ret;
         }
         
-        cout << ")";
+        //cout << ")";
         answer = answer + ")";
     }
     
@@ -366,7 +366,7 @@ bool Output()
     
     iter = node_map.find(EXPECTION);
     if (iter == node_map.end()) {
-        cout<<"we can't fine the solution"<<endl;
+        //cout<<"we can't fine the solution"<<endl;
         return false;
     }
     
@@ -374,7 +374,7 @@ bool Output()
     if (ret == false) {
         return ret;
     }
-    cout<<endl;
+    //cout<<endl;
     
     return true;
 }
@@ -512,11 +512,44 @@ std::string Calc24(const std::vector<unsigned char>& InputCards)
 }
 
 /*
+ * 测试器……
+ */
+
+char card_arr[52] = {'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
+                 'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
+                 'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
+                 'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K'};
+
+#define MAX 52
+
+void test()
+{
+    vector<unsigned char> TestInputCards(4);
+    
+    for (int i = 0; i < MAX - 3; i++) {
+        for (int j = i + 1; j < MAX - 2; j++) {
+            for (int m = j + 1; m < MAX - 1; m ++) {
+                for (int n = m + 1; n < MAX ; n++) {
+                    TestInputCards[0] = card_arr[i];
+                    TestInputCards[1] = card_arr[j];
+                    TestInputCards[2] = card_arr[m];
+                    TestInputCards[3] = card_arr[n];
+                    cout<<TestInputCards[0]<<" "<<TestInputCards[1]<<" "<<TestInputCards[2]<<" "<<TestInputCards[3]<<endl;
+                    cout<<Calc24(TestInputCards)<<endl;
+                }
+            }
+        }
+    }
+}
+/*
  * 接下来是补充测试用例，但是写测试用例是需要按照一个原则来写的。首先是代码覆盖，
  * 然后考虑边界场景，再需要抵抗异常输入。还要考虑24点的经典6种公式是否都可以表达。
  */
 int main() 
 {
+    test();
+    
+#if 0
     /*
     vector<unsigned char> InputCards(6);
     
@@ -576,6 +609,7 @@ int main()
     
     cout<<Calc24(InputCards6)<<endl;
     
+    /*
     vector<unsigned char> InputCards7(16);
     
     InputCards7[0] = 'A';
@@ -595,16 +629,10 @@ int main()
     
     InputCards7[14] = 'A';
     InputCards7[15] = 'A';
-    /*
-    InputCards7[16] = 'A';
-    InputCards7[17] = 'A';
-    
-    InputCards7[18] = 'A';
-    */
     
     cout<<Calc24(InputCards7)<<endl;
-    //Solve();
-    //Output();
-    //system("PAUSE");
+    */
+#endif
+    
     return 0; 
 }
