@@ -78,6 +78,11 @@ struct State {
     elementMap element_map;//这个应该可以优化成map……，value是键值
 };
 
+struct ChangRule {
+    bool change; //标识是否改变了点数
+    int cardNum; // 卡牌数量
+    int cardPoint; // 卡牌点数
+};
 /*
  * global var
  */
@@ -93,11 +98,11 @@ void StateInit();
 void StateMerge(int a, int b, int x);
 void Solve();
 bool PrintExpression(elementNode node);
-bool Output();
-bool Calculate24Point();
+bool Output(int point = EXPECTION);
+bool CalculatePoint(int point = EXPECTION);
 string num2Card(int num);
 int card2Num(char Point);
-std::string Calc24(const std::vector<unsigned char>& InputCards);
+std::string Calc24(const std::vector<unsigned char>& InputCards, int point = EXPECTION);
 
 /*
  * 手动测试赋值用
@@ -120,7 +125,7 @@ void ReadData()
     number[4] = 1;
     number[5] = 1;
     number[6] = 2;
-    
+
     //expection = 24;
 }
 
@@ -130,14 +135,14 @@ void ReadData()
 void StateInit()
 {
     elementNode node ;
-    
+
     for (int i = 0; i < g_state_cnt; i++) {
         state[i].element_map.clear();
         state[i].exist.reset();
     }
-    
+
     answer = "";
-    
+
     for (int i = 0; i < g_number_cnt; i++) {
         node.value              = number[i];
         node.left = node.right = -1;
@@ -162,62 +167,62 @@ void StateMerge(int a, int b, int x)
 {
     elementNode node;
     elementMap::iterator i, j;
-    
+
     for (i = state[a].element_map.begin(); i != state[a].element_map.end(); i++){
         for (j = state[b].element_map.begin(); j != state[b].element_map.end(); j++){
-            
+
             /*
              ************************************************
              * +
              ************************************************
              */
-            
+
             //node.value = (*i).value + (*j).value;
             node.value = i->second.value + j->second.value;
-            
+
             if ( (node.value <= MAX_VALUE) && (!state[x].exist[node.value]) ) {
                 node.left  = a;
                 node.right = b;
                 node.left_value  = i->second.value;
                 node.right_value = j->second.value;
                 node.opr   = '+';
-                
+
                 //state[x].nodelist.push_back(node);
                 state[x].element_map[node.value] = node;
                 state[x].exist[node.value] = true;
             }
-            
+
             /*
              ************************************************
              * *
              ************************************************
              */
-            
+
             //double tmp = double((*i).value) * double((*j).value);
             double tmp_max = double(i->second.value) * double(j->second.value);
-            
+
             if (tmp_max < INT_MAX) {
                 node.value = i->second.value * j->second.value;
-                
+
                 if ( (node.value <= MAX_VALUE) && (!state[x].exist[node.value]) ){
                     node.left  = a;
                     node.right = b;
                     node.left_value  = i->second.value;
                     node.right_value = j->second.value;
                     node.opr   = '*';
-                    
+
                     //state[x].nodelist.push_back(node);
                     state[x].element_map[node.value] = node;
                     state[x].exist[node.value] = true;
                 }
             }
-            
+
             /*
              ************************************************
              * -
              ************************************************
              */
-            
+
             if (i->second.value >= j->second.value) {
                 node.value = i->second.value - j->second.value;
                 node.left  = a;
@@ -233,20 +238,20 @@ void StateMerge(int a, int b, int x)
                 node.right_value = i->second.value;
                 node.opr   = '-';
             }
-            
+
             if ( (node.value <= MAX_VALUE) && (!state[x].exist[node.value]) ) {
                 //state[x].nodelist.push_back(node);
                 state[x].element_map[node.value] = node;
                 state[x].exist[node.value] = true;
             }
-            
+
             /*
              ************************************************
              * /
              ************************************************
              */
-            
-            
+
+
             if ( (j->second.value != 0) && (i->second.value >= j->second.value) && (i->second.value % j->second.value == 0) )
             {
                 node.value = i->second.value / j->second.value;
@@ -264,13 +269,13 @@ void StateMerge(int a, int b, int x)
                 node.right_value = i->second.value;
                 node.opr   = '/';
             }
-            
+
             if ( (node.value <= MAX_VALUE) && (!state[x].exist[node.value]) ){
                 //state[x].nodelist.push_back(node);
                 state[x].element_map[node.value] = node;
                 state[x].exist[node.value] = true;
             }
-            
+
         }
     }
 }
@@ -281,7 +286,7 @@ void StateMerge(int a, int b, int x)
 void Solve()
 {
     StateInit();
-    
+
     /* 循环：
      * 这里有一次重复，通过if i < j解决，8.11
      * for x ← 1 to 2^n-1 do
@@ -313,43 +318,43 @@ void Solve()
 bool PrintExpression(elementNode node)
 {
     bool ret;
-    
+
     if (node.left == -1) {
         //cout << node.value;
         answer = answer + num2Card(node.value);
     } else {
         elementMap::iterator iter;
-        
+
         //cout << "(";
         answer = answer + "(";
-        
+
         iter = state[node.left].element_map.find(node.left_value);
         if (iter == state[node.left].element_map.end()) {
             return false;
         }
-        
+
         ret = PrintExpression(iter->second);
         if (ret == false) {
             return ret;
         }
-        
+
         //cout << node.opr;
         answer = answer + node.opr;
-        
+
         iter = state[node.right].element_map.find(node.right_value);
         if (iter == state[node.right].element_map.end()) {
             return false;
         }
-        
+
         ret = PrintExpression(iter->second);
         if (ret == false) {
             return ret;
         }
-        
+
         //cout << ")";
         answer = answer + ")";
     }
-    
+
     return true;
 }
 
@@ -357,41 +362,41 @@ bool PrintExpression(elementNode node)
  * 看全集中是否有24这个结果
  */
 
-bool Output()
+bool Output(int point)
 {
     elementMap::iterator iter;
     bool ret = false;
-    
+
     elementMap& node_map = state[g_state_cnt-1].element_map;
-    
-    iter = node_map.find(EXPECTION);
+
+    iter = node_map.find(point);
     if (iter == node_map.end()) {
         //cout<<"we can't fine the solution"<<endl;
         return false;
     }
-    
+
     ret = PrintExpression(iter->second);
     if (ret == false) {
         return ret;
     }
     //cout<<endl;
-    
+
     return true;
 }
 
 /*
  * 计算24点
  */
-bool Calculate24Point()
+bool CalculatePoint(int point)
 {
     bool ret = false;
-    
+
     //ReadData();
 
     Solve();
 
-    ret = Output();
-    
+    ret = Output(point);
+
     return ret;
 }
 
@@ -408,7 +413,7 @@ string num2Card(int num)
      * 13:"K"
      */
     stringstream ssCard;
-    
+
     switch (num) {
         case 1:
             return "A";
@@ -423,14 +428,15 @@ string num2Card(int num)
             ssCard<<num;
             return ssCard.str();
         case 10:
-            return "T";
+//            return "T";
+            return "10";
         case 11:
             return "J";
         case 12:
             return "Q";
         case 13:
             return "K";
-            
+
         default:
             break;
     }
@@ -449,9 +455,11 @@ int card2Num(char Point)
      * Q:12
      * K:13
      */
-    
+
     switch (Point) {
         case 'A':
+        case 'a':
+        case '1':
             return 1;
         case '2':
         case '3':
@@ -463,17 +471,21 @@ int card2Num(char Point)
         case '9':
             return Point-'0';
         case 'T':
+        case 't':
             return 10;
         case 'J':
+        case 'j':
             return 11;
         case 'Q':
+        case 'q':
             return 12;
         case 'K':
+        case 'k':
             return 13;
         default:
             return 0;
     }
-    
+
     return 0;
 }
 
@@ -483,31 +495,31 @@ int card2Num(char Point)
 
 #define ANSWER_54 "A-A+2-2+3-3+4-4+5-5+6-6+7-7+8-8+9-9+T-T+J-J+K-K+A-A+2-2+3-3+4-4+5-5+6-6+7-7+8-8+9-9+T-T+J-J+K-K+Q+Q+Q-Q"
 
-std::string Calc24(const std::vector<unsigned char>& InputCards)
+std::string Calc24(const std::vector<unsigned char>& InputCards, int point)
 {
     bool ret;
     size_t size = InputCards.size();
-    
+
     if (size == 52) {
         return ANSWER_54;
     }
-    
+
     if (size > MAX_NUMBER_COUNT) {
         return "NA";
     }
-    
+
     for (int i = 0; i < size; i ++) {
         number[i] = card2Num(InputCards[i]);
     }
-    
+
     g_number_cnt = (int)size;
     g_state_cnt = 1<<g_number_cnt;
-    
-    ret = Calculate24Point();
-    if (ret == false) {
+
+    ret = CalculatePoint(point);
+    if (!ret) {
         return "NA";
     }
-    
+
     return answer;//这里用一个全局变量来存储结果吧。
 }
 
@@ -516,16 +528,16 @@ std::string Calc24(const std::vector<unsigned char>& InputCards)
  */
 
 char card_arr[52] = {'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
-                 'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
-                 'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
-                 'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K'};
+                     'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
+                     'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
+                     'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K'};
 
 #define MAX 52
 
 void test()
 {
     vector<unsigned char> TestInputCards(4);
-    
+
     for (int i = 0; i < MAX - 3; i++) {
         for (int j = i + 1; j < MAX - 2; j++) {
             for (int m = j + 1; m < MAX - 1; m ++) {
@@ -541,14 +553,86 @@ void test()
         }
     }
 }
+bool ChkInputValid(std::string input) {
+    if (input.length() == 1) {
+        return true;
+    } else if(input.length() == 2) {
+        if (input == "10" || input == "11" || input == "12" || input == "13") {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool ChkInputVecValid(std::vector<std::string> vec) {
+    for (auto elem:vec) {
+        if (!ChkInputValid(elem)) {
+            return false;
+        }
+    }
+    return true;
+}
+char CovertToChar(std::string input) {
+    if(input.length() == 1) {
+        return input[0];
+    } else if(input.length() == 2) {
+        if (input == "10") {
+            return 'T';
+        } else if (input == "11") {
+            return 'J';
+        } else if (input == "12") {
+            return 'Q';
+        } else if (input == "13") {
+            return 'K';
+        } else {
+            return ' ';
+        }
+    }
+    return ' ';
+}
+void ChangRuleOrExit(bool &exitFlag, ChangRule &rule) {
+    rule.change = false;
+    std::cout<< "是否退出?是请输入1，不是请输入0;修改规则请输入2:" <<std::endl;
+    std::string tmpFlag;
+    std::cin >> tmpFlag;
+    while(true)
+    {
+        if (tmpFlag == "true" || tmpFlag == "1") {
+            exitFlag = true;
+            break;
+        } else if (tmpFlag == "false" || tmpFlag == "0") {
+            exitFlag = false;
+            break;
+        } else if(tmpFlag == "2")
+        {
+            std::cout<< "请输入使用的卡牌数量以及点数" <<std::endl;
+            std::string num,point;
+            cin>> num>> point;
+            rule.change = true;
+            rule.cardNum = atoi(num.c_str());
+            rule.cardPoint = atoi(point.c_str());
+            exitFlag = false;
+            break;
+        } else {
+            std::cout << "输入有误！！！！是否退出?是请输入1，不是请输入0:" << std::endl;
+            cin.clear();
+            // 调用 cin.clear(), 可以解除 cin 的记仇状态，让 cin 恢复正常。
+            // 即：让 cin.fail() 变成 0, cin.good() 变成 1.
+            // 接下来，应该清空缓冲区了。因为，让 cin 出错的数据依然在输入缓冲区中，
+            // 直接重新输入的话，又要出错。
+            cin.ignore(2048, '\n');
+            std::cin >> tmpFlag;
+        }
+    }
+}
 /*
  * 接下来是补充测试用例，但是写测试用例是需要按照一个原则来写的。首先是代码覆盖，
  * 然后考虑边界场景，再需要抵抗异常输入。还要考虑24点的经典6种公式是否都可以表达。
  */
-int main() 
+int main()
 {
-    test();
-    
+//    test();
+
 #if 0
     /*
     vector<unsigned char> InputCards(6);
@@ -633,6 +717,35 @@ int main()
     cout<<Calc24(InputCards7)<<endl;
     */
 #endif
-    
-    return 0; 
+    bool exitFlag = false;
+    ChangRule rule;
+    std::cout<< "请输入使用的卡牌数量以及点数" <<std::endl;
+    std::string num,point;
+    cin>> num>> point;
+    rule.change = true;
+    rule.cardNum = atoi(num.c_str());
+    rule.cardPoint = atoi(point.c_str());
+    exitFlag = false;
+    while(!exitFlag) {
+        std::cout << "计算的点数为"<< rule.cardPoint <<";请输入"<< rule.cardNum <<"张卡牌" << std::endl;
+        std::vector<std::string> input(rule.cardNum);
+        for (auto &elem:input){
+            std::cin>>elem;
+        }
+        vector<unsigned char> InputCards(rule.cardNum);
+        if (!ChkInputVecValid(input)) {
+            std::cout<< "卡牌存在不合法输入，请重新操作"<< std::endl;
+            cin.clear();
+            cin.ignore(2048, '\n');
+            exitFlag =false;
+            continue;
+        }
+        for(int i = 0; i < InputCards.size(); i++) {
+            InputCards[i] = CovertToChar(input[i]);
+        }
+        std::cout<<Calc24(InputCards, rule.cardPoint)<<std::endl;
+
+        ChangRuleOrExit(exitFlag, rule);
+    }
+    return 0;
 }
