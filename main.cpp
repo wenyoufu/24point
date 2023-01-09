@@ -614,7 +614,7 @@ void ChangRuleOrExit(bool &exitFlag, ChangRule &rule) {
             exitFlag = false;
             break;
         } else {
-            std::cout << "输入有误！！！！是否退出?是请输入1，不是请输入0:" << std::endl;
+            std::cout << "输入有误！是否退出?是请输入1，不是请输入0;修改规则请输入2:" << std::endl;
             cin.clear();
             // 调用 cin.clear(), 可以解除 cin 的记仇状态，让 cin 恢复正常。
             // 即：让 cin.fail() 变成 0, cin.good() 变成 1.
